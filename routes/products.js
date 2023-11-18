@@ -106,19 +106,8 @@ router.get('/:catName', (req, res) => {
 });
 
 //product with id
-router.get('/:id', (req, res) => {
-    let page = (req.query.page !== undefined && req.query.page !== 0) ? req.query.page : 1;
-    const limit = (req.query.limit !== undefined && req.query.limit !== 0) ? req.query.limit : 10;
-
-    let startValue, endValue;
-
-    if (page > 0) {
-        startValue = (page * limit) - limit;
-        endValue = (page * limit);
-    } else {
-        startValue = 0;
-        endValue = 10;
-    }
+router.get('/id/:id', (req, res) => {
+    
 
     let productid = req.params.id;
 
