@@ -76,31 +76,96 @@ router.get('/order/:id', (req, res) => {
     
 })
 
-router.post('/new', async (req, res) => {
-    const { user_id, products } = req.body;
+// router.post('/new', async (req, res) => {
+//     const { user_id, products } = req.body;
 
-    //const cartQuery = `SELECT * FROM cart WHERE userid = ${user_id}`;
+//     try {
+//         // Insert new order
+//         const insertOrderQuery = 'INSERT INTO orders (user_id, created_at) VALUES (?, NOW())';
+//         const [newOrderResult] = await pool.query(insertOrderQuery, [user_id]);
+
+//         const newOrderId = newOrderResult.insertId;
+
+//         // Insert order details for each product
+//         for (const product of products) {
+//             const { product_id, quantity } = product;
+
+//             const insertOrderDetailsQuery = 'INSERT INTO orders_details (order_id, product_id, quantity) VALUES (?, ?, ?)';
+//             await pool.query(insertOrderDetailsQuery, [newOrderId, product_id, quantity]);
+//         }
+
+//         res.json({
+//             message: `Order successfully placed with order id ${newOrderId}`,
+//             success: true,
+//             order_id: newOrderId,
+//             products: products
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: 'Internal Server Error', success: false });
+//     }
+// });
+
+router.post('/new/:id', async (req, res) => {
+    const user_id = req.params.id;
 
     try {
-        // Insert new order
-        const insertOrderQuery = 'INSERT INTO orders (user_id, created_at) VALUES (?, NOW())';
-        const [newOrderResult] = await pool.query(insertOrderQuery, [user_id]);
+        // Step 1: Insert new order
+        const insertOrderQuery = `INSERT INTO orders (user_id) VALUES (${user_id})`;
+        let newOrderId;
+            connection.query(insertOrderQuery, (err, order) => {
+                if (err) {
+                    console.error(err);
+                    res.status(500).json({ error: 'Internal Server Error' });
+                    return;
+                }
+        
+                newOrderId = order.insertId;
+               
+            }); 
 
-        const newOrderId = newOrderResult.insertId;
+        // Step 2: Select products from cart
+        const cartQuery = 'SELECT * FROM cart WHERE userid = ?';
+        connection.query(cartQuery, [user_id], async (err, cartRows) => {
+            if (err) {
+                console.error(err);
+                res.status(500).json({ error: 'Internal Server Error' });
+                return;
+            }
 
-        // Insert order details for each product
-        for (const product of products) {
-            const { product_id, quantity } = product;
+            if (cartRows.length > 0) {
+                const products = [];
 
-            const insertOrderDetailsQuery = 'INSERT INTO orders_details (order_id, product_id, quantity) VALUES (?, ?, ?)';
-            await pool.query(insertOrderDetailsQuery, [newOrderId, product_id, quantity]);
-        }
+                // Step 3: Insert order details for each product
+                for (const product of cartRows) {
+                    const { product_id, quantity } = product;
 
-        res.json({
-            message: `Order successfully placed with order id ${newOrderId}`,
-            success: true,
-            order_id: newOrderId,
-            products: products
+                    const insertOrderDetailsQuery = 'INSERT INTO orders_details (order_id, product_id, quantity) VALUES (?, ?, ?)';
+                    await connection.query(insertOrderDetailsQuery, [newOrderId, product_id, quantity]);
+
+                    // Create an object with product details and push it to the products array
+                    const productDetails = {
+                        product_id,
+                        quantity,
+                        // Add other product details if needed
+                    };
+                    products.push(productDetails);
+                }
+
+                // Step 4: Clear the user's cart after order placement
+                const clearCartQuery = 'DELETE FROM cart WHERE userid = ?';
+                await connection.query(clearCartQuery, [user_id]);
+
+                // Step 5: Respond with success message and order details
+                res.json({
+                    message: `Order successfully placed with order id ${newOrderId}`,
+                    success: true,
+                    order_id: newOrderId,
+                    products: products
+                });
+            } else {
+                res.json({ message: 'No products found in the cart' });
+            }
         });
     } catch (error) {
         console.error(error);
@@ -108,7 +173,10 @@ router.post('/new', async (req, res) => {
     }
 });
 
-router.post('/payment', (req, res) => {
+
+router.get('/pay/success', (req, res) => {
+    console.log("Payment successful");
     res.send("Payment successful")
- });
+});
+
 module.exports = router;
