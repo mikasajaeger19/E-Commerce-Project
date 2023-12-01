@@ -30,11 +30,13 @@ const productsRoute = require('./routes/products');
 const usersRoute = require('./routes/users');
 const authRoute = require('./routes/auth');
 const ordersRoute = require('./routes/orders');
+const cartRoute = require('./routes/cart');
 
 app.use('/api/products', productsRoute);
 app.use('/api/users', usersRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/orders', ordersRoute);
+app.use('/api/cart', cartRoute);  
 
 app.get('/', (req, res) => {
     res.send('Welcome to the API');

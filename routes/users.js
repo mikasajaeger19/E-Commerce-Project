@@ -28,7 +28,7 @@ router.get('/:id', (req, res) => {
     let userId = req.params.id;
 
     const query = `
-    SELECT u.id, u.username, u.email, u.fname, u.email
+    SELECT u.id, u.username, u.email, u.fname
     FROM users as u
     WHERE u.id = ${userId};
     `;

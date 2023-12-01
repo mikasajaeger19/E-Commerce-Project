@@ -79,6 +79,8 @@ router.get('/order/:id', (req, res) => {
 router.post('/new', async (req, res) => {
     const { user_id, products } = req.body;
 
+    //const cartQuery = `SELECT * FROM cart WHERE userid = ${user_id}`;
+
     try {
         // Insert new order
         const insertOrderQuery = 'INSERT INTO orders (user_id, created_at) VALUES (?, NOW())';
