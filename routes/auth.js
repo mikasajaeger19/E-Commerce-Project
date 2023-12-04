@@ -44,6 +44,7 @@ router.post('/login', [
         }
 
         const user = results[0];
+        //res.send(user);
 
         // Compare the provided password with the hashed password in the database
         bcrypt.compare(password, user.password, (bcryptError, isMatch) => {
@@ -59,7 +60,7 @@ router.post('/login', [
                     { expiresIn: '4h' }
                 );
 
-                res.json({ token, auth: true, email: user.email, username: user.username, userId: user.id });
+                res.json({ token, auth: true, email: user.email, username: user.username, userId: user.id, role: user.role });
             } else {
                 res.status(401).json({ error: 'Invalid credentials' });
             }
@@ -94,8 +95,8 @@ router.post('/register', [
         let email = req.body.email;
         let username = email.split("@")[0];
         let password = await bcrypt.hash(req.body.password, 10);
-        let fname = req.body.fname;
-        let lname = req.body.lname;
+        let fname = req.body.firstName;
+        let lname = req.body.lastName;
 
         // Insert user into the database
         pool.query('INSERT INTO users (username, password, email, role, lname, fname) VALUES (?, ?, ?, ?, ?, ?)',
